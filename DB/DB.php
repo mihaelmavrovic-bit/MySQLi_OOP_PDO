@@ -41,5 +41,4 @@ class DB{
     
 }
 
-$db= DB::getInstance()->connpdo; //provjera konekcije s bazom
 ?>

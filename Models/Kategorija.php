@@ -8,32 +8,92 @@ class Kategorija{
     public string $naziv;
 
     public static function allCategories(): array{
-        $db = DB::getInstance();
+        $db = DB::getInstance()->connpdo;
         $sql = "SELECT * FROM kategorije";
         $result = $db->query($sql);
 
         return $result->fetchAll();
     }
     
-    public static function insert($naziv) {
-        $db = DB::getInstance();
+    public static function insert($naziv): mixed {
+        $db = DB::getInstance()->connpdo;
 
         try{
             $sql = "INSERT INTO kategorije(naziv) values (:naziv)";
             $stmt = $db->prepare($sql);
-            $ok = $stmt->execuete(
-                [
-                    ':naziv' => $naziv
-
+            $ok = $stmt->execute(
+                [ 
+                ':naziv' => $naziv
                 ]
                 );
+                return $ok;
             }
         catch(PDOException $e){
             $msg = $e->getMessage();
             Redirect::redirectToErrorPage($msg);
+            exit;
 
         }
     }
+
+    public static function getByID($id): bool {
+        $db = DB::getInstance()->connpdo;
+
+        $stmt = $db->prepare("SELECT * FROM kategorije WHERE id = :id");
+        $ok = $stmt -> execute([':id'=> $id]);
+
+        $row = $stmt->fetchAll();
+        return $row ; 
+
+    }
+
+    public static function update ($id, $naziv): bool{
+        $db = DB::getInstance()->connpdo;
+        try{
+        $sql = "UPDATE kategorije set naziv = :naziv where id= :id";
+        $stmt = $db->prepare($sql);
+
+        $ok = $stmt->execute(
+            [
+                ':id' => $id,
+                ':naziv'=> $naziv
+            ]
+        );
+        return $ok;
+    }
+    catch(PDOException $e){
+         $msg = "Greška: ". $e->getMessage();
+            Redirect::redirectToErrorPage($msg);
+            exit;
+    }
+    }
+    
+
+    public static function delete ($id): bool {
+        $db = DB::getInstance()->connpdo;
+
+        try{
+            $sql = "DELETE FROM kategorije where id=:id;";
+            $stmt = $db->prepare($sql);
+            $_SESSION["Poruka izbrisana"] = "Kategorija je izbrisan";
+            return $stmt->execute([':id' => $id]);
+        }
+        catch(PDOException $e){
+            $msg = "Greška: ". $e->getMessage();
+            Redirect::redirectToErrorPage($msg);
+            exit;
+
+        }
+    }
+
+    public static function insertForTransaction($naziv, PDO $db): int{
+
+        $stmt = $db->prepare("INSERT INTO kategorije (naziv) values (:naziv)");
+        $stmt->execute([':naziv' => $naziv]);
+        return $db->lastInsertId();
+
+    }
 }
+
 
 ?>

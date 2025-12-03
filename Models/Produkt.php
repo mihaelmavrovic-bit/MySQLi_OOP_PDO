@@ -6,93 +6,105 @@ require_once "Redirect.php";
 
 class Product{
 
-     private static function validateProdukt(int $cijena, float $kolicina){
-        if($kolicina < 10 ){
-            $msg= "Količina je manja od 10";
-        }
+   public static function allProducts($sort ="asc") : array{
+    $db = DB::getInstance()->connpdo;
 
-        if($cijena < 5 ){
-            $msg= "Cijena  je manja od 5";
-        }
-        #Redirect::redirectToErrorPage($msg);
-    }
-
-    
-
-    
-
-    public static function allProducts($sort = "asc"): array{
-    $db= DB::getInstance()->conn;
-    $sql ="SELECT p.*, k.naziv as kategorija
+    $sql = "SELECT p.*, k.naziv as kategorija
     from produkti p inner join kategorije k
     on p.kategorijaid = k.id order by p.id $sort" ;
+
+        $result = $db->query($sql);
+        return $result->fetchAll();
+   }
+
+
+   public static function insert ($naziv,$kolicina,$cijena,$kategorijaid){
+      $db = DB::getInstance()->connpdo;
+
+      try{
+         $sql = "INSERT into produkti (naziv,kolicina,cijena,kategorijaid) values (:naziv,:kolicina,:cijena,:kategorijaid)";
+         $stmt = $db->prepare($sql);
+         return $stmt->execute([
+            ":naziv"=> $naziv,
+            ":kolicina"=> $kolicina,
+            ":cijena"=> $cijena,
+            ":kategorijaid"=> $kategorijaid
+         ]);
+      }
+      catch(PDOException $e) {
+        $msg ="Greška kod unosa".$e->getMessage();
+        Redirect::redirectToErrorPage($mg);
+        exit;
+      }
+   }
+
+     public static function getByID($id): mixed {
+        $db = DB::getInstance()->connpdo;
+
+        $stmt = $db->prepare("SELECT * FROM produkti WHERE id = :id");
+        $stmt -> execute([':id'=> $id]);
+
+        $row = $stmt->fetch();
+        return $row ?: null; 
+
+    }
+
+      public static function update($id,$naziv,$kolicina,$cijena,$kategorijaid): mixed {
+        $db = DB::getInstance()->connpdo;
         
-    $result = $db->query($sql);
-    return $result->fetch_all(MYSQLI_ASSOC);
-    }
-
-     public static function insert($naziv,$kolicina,$cijena,$kategorijaid){
-        self::validateProdukt($cijena, $kolicina);        
-        $db = DB::getInstance()->conn;
-
         try{
-            $stmt = $db->prepare("INSERT INTO produkti (naziv,kolicina,cijena,kategorijaid) values (?,?,?,?)");
-            $stmt->bind_param("sidi",$naziv,$kolicina,$cijena,$kategorijaid);
-            return $stmt->execute();
-        }
-        catch(mysqli_sql_exception $e){
-            $msg="Greška kod unosa" .$e->getMessage();
-            Redirect::redirectToErrorPage($msg);
-            exit;
-        }
-    }
+        $sql = "UPDATE produkti 
+        set naziv = :naziv, kolicina= :kolicina, cijena= :cijena, kategorijaid=:kategorijaid
+         where id = :id";
+         
 
-
-
-     public static function getById($id): array|bool|null{
-        $db = DB::getInstance()->conn;
-
-        $stmt = $db->prepare("SELECT * from produkti WHERE id = ?");
-        $stmt->bind_param("i",$id);
-        $stmt->execute();
-
-        $result = $stmt->get_result();
-        return $result->fetch_assoc();      
-    }
-
-    
-    public static function update($id,$naziv,$kolicina,$cijena,$kategorijaid): bool {
-        $db = DB::getInstance()->conn;
+        $_SESSION["poruka"] = "Proizvod naziva {$naziv} uspješno ažuriran!";
         
-        try{
-        $stmt = $db->prepare("UPDATE produkti set naziv = ?, kolicina=?, cijena=?, kategorijaid=? where id = ?");
-        $stmt->bind_param("sidii",$naziv,$kolicina,$cijena,$kategorijaid,$id);
-        return $stmt->execute();
+        return $stmt->execute([  
+         ':naziv'=> $naziv,
+         ':kolicina'=> $kolicina,
+         ':cijena'=> $cijena,
+         ':kategorijaid'=> $kategorijaid
+        ]);
         }
-        catch(mysqli_sql_exception $e){
+        catch(PDOException $e){
             $msg= "Greška kod ažuriranja" .$e->getMessage();
             Redirect::redirectToErrorPage($msg);
             exit;
         }
     }
 
-       public static function delete($id): bool {
-        $db = DB::getInstance()->conn;
-        
+       public static function delete ($id): bool {
+        $db = DB::getInstance()->connpdo;
+
         try{
-             $stmt = $db->prepare("DELETE FROM produkti WHERE id = ?");
-        $stmt->bind_param("i",$id);
-        $_SESSION["poruka"]="Produkt uspješno izbrisan!";
-        return $stmt->execute();
+            $sql = "DELETE FROM produkti where id=:id;";
+            $stmt = $db->prepare($sql);
+            $_SESSION["Poruka "] = "Proizvod je izbrisan";
+            return $stmt->execute([':id' => $id]);
         }
-       catch(mysqli_sql_exception $e){
-       $msg= "Greška kod brisanja" .$e->getMessage();
+        catch(PDOException $e){
+            $msg = "Greška: ". $e->getMessage();
             Redirect::redirectToErrorPage($msg);
             exit;
-       }
 
+        }
     }
 
+     public static function insertForTransaction($naziv,$kolicina,$cijena,$kategorijaid, PDO $db): bool{
+
+        $sql=("INSERT INTO produkti (naziv,kolicina,cijena,kategorijaid) values (:naziv,:kolicina,:cijena,:kategorijaid)");
+        $stmt= $db->prepare($sql);
+        
+       return $stmt->execute([
+         ':naziv'=> $naziv,
+         ':kolicina'=> $kolicina,
+         ':cijena'=> $cijena,
+         ':kategorijaid'=> $kategorijaid
+
+       ]);
+
+    }
 }
 
 
