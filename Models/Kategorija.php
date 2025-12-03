@@ -36,18 +36,18 @@ class Kategorija{
         }
     }
 
-    public static function getByID($id): bool {
+    public static function getByID($id) {
         $db = DB::getInstance()->connpdo;
 
         $stmt = $db->prepare("SELECT * FROM kategorije WHERE id = :id");
         $ok = $stmt -> execute([':id'=> $id]);
 
-        $row = $stmt->fetchAll();
-        return $row ; 
+        $row = $stmt->fetch();
+        return $row ?: null;
 
     }
 
-    public static function update ($id, $naziv): bool{
+    public static function update ($id, $naziv){
         $db = DB::getInstance()->connpdo;
         try{
         $sql = "UPDATE kategorije set naziv = :naziv where id= :id";
@@ -59,7 +59,6 @@ class Kategorija{
                 ':naziv'=> $naziv
             ]
         );
-        return $ok;
     }
     catch(PDOException $e){
          $msg = "Greška: ". $e->getMessage();

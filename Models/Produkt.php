@@ -33,7 +33,7 @@ class Product{
       }
       catch(PDOException $e) {
         $msg ="Greška kod unosa".$e->getMessage();
-        Redirect::redirectToErrorPage($mg);
+        Redirect::redirectToErrorPage($msg);
         exit;
       }
    }
@@ -49,7 +49,7 @@ class Product{
 
     }
 
-      public static function update($id,$naziv,$kolicina,$cijena,$kategorijaid): mixed {
+      public static function update($id,$naziv,$kolicina,$cijena,$kategorijaid){
         $db = DB::getInstance()->connpdo;
         
         try{
@@ -57,14 +57,15 @@ class Product{
         set naziv = :naziv, kolicina= :kolicina, cijena= :cijena, kategorijaid=:kategorijaid
          where id = :id";
          
-
+          $stmt = $db->prepare($sql);
         $_SESSION["poruka"] = "Proizvod naziva {$naziv} uspješno ažuriran!";
         
         return $stmt->execute([  
          ':naziv'=> $naziv,
          ':kolicina'=> $kolicina,
          ':cijena'=> $cijena,
-         ':kategorijaid'=> $kategorijaid
+         ':kategorijaid'=> $kategorijaid,
+         ':id'=>$id
         ]);
         }
         catch(PDOException $e){

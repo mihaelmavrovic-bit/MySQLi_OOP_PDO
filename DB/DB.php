@@ -20,7 +20,7 @@ class DB{
             ]
         
         );
-        echo "<br>Konekcija uspješna";
+       // echo "<br>Konekcija uspješna";
         }
         catch (PDOException $e){
             die("Greška s bazom: ". $e->getMessage());
