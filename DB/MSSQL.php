@@ -7,7 +7,7 @@ class MSSQL{
 
     private function __construct(){
 
-        $dsn = "sqlsrv:Server=MIKS01\\SQLEXPRESS;Database=eduka";
+        $dsn = "sqlsrv:Server=DESKTOP-NAQM2HS\\SQLEXPRESS;Database=Fakultet";
         $user="eduka_user";
         $pass="Lozinka123!";
 
@@ -17,6 +17,7 @@ class MSSQL{
                 PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
             ]
             );
+           // echo "<br>Konekcija uspješna!";
         }
         catch(PDOException $e)
         {
@@ -36,6 +37,6 @@ class MSSQL{
 
     
 } 
-    ///$db = MSSQL::getInstance()->connsql; //provjera konekcije baze
+   // $db = MSSQL::getInstance()->connsql; //provjera konekcije baze
 
 ?>
